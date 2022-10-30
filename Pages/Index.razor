@@ -1,0 +1,50 @@
+﻿@page "/"
+@using RamMachineInterpreter.Data;
+@using System.Web;
+@using System.Text.RegularExpressions;
+
+<PageTitle>Index</PageTitle>
+
+
+<h1>RamMachine Interpreter</h1>
+
+<EditForm Model="@Code" class="d-flex flex-column align-items-stretch">
+	<div class="d-flex flex-column align-items-stretch">
+		<h2>Code:</h2>
+		<InputTextArea @bind-Value="@Code"  class="flex-fill"/>
+	</div>
+	<div class="d-flex flex-column align-items-stretch">
+		<h2>Inputs:</h2><br />
+		<InputTextArea @bind-Value="@Input"/>
+	</div>
+
+	<button class="btn btn-primary" @onclick="Run">Run</button>
+
+	<div class="d-flex flex-column align-items-stretch">
+		<h2>Output:</h2>
+		<p>@((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@Output), "\r?\n|\r", "<br />"))</p>
+	</div>
+</EditForm>
+
+
+@code {
+	private string Code { get; set; } = "STORE =10";
+	private string Output { get; set; } = "";
+	private string Input { get; set; } = "";
+	private Interpreter? _interpreter;
+
+	private void Run()
+	{
+		_interpreter ??= new();
+		var inputs = Input.Split('\n').ToArray();
+		try
+		{
+			_interpreter.ParseCode(Code);
+			string[] output = _interpreter.Execute(inputs);
+			Output = string.Join('\n', output);
+		}catch(Exception ex)
+		{
+			Output = ex.Message;
+		}
+	}
+}
