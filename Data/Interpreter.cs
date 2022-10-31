@@ -65,6 +65,7 @@ public class Interpreter {
 		_interrupt = false;
 		_inputs = inputs?.ToList();
 		_nextInputIndex = 0;
+		Memory.Reset();
 		string? newOutput;
 		List<string> output = new();
 
