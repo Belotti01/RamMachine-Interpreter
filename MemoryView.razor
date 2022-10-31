@@ -2,7 +2,7 @@
 
 @if(Memory is not null)
 {
-	<table class="table table-bordered table-active">
+	<table class="table table-bordered">
 		<thead>
 			<tr>
 				<th scope="col" class="text-center w-50">Accumulator</th>
@@ -29,19 +29,21 @@
 			</tr>
 		</thead>
 		<tbody>
-			@for(uint d = 0; true; d += 10) {
-				if(Memory.MaxAssignedAddress < d)
-					break;
+			@for(uint d = 0; d <= Memory.MaxAssignedAddress; d += 10)
+			{
+				uint td = d;
 				<tr>
-							<th scope="row" class="text-end">@d - @(d + 9)</th>
+					<th scope="row" class="text-end">@d - @(d + 9)</th>
 					@for(uint i = 0; i < 10; i++)
 					{
-						@if (Memory.MaxAssignedAddress < d + i)
+						uint ti = i;
+						@if (Memory.WasUsed(td+ti))
 						{
-											<td class="text-center" >0</td>
+								<td class="text-center fw-bold"><MudText Class="bg-gradient fw-bolder">@Memory[td+ti]</MudText></td>
 						}
-						else {
-											<td class="text-center" >@Memory[d+i]</td>
+						else 
+						{
+								<td class="text-center">0</td>
 						}
 					}
 				</tr>

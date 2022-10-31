@@ -37,4 +37,9 @@ public class Memory {
 		Accumulator = 0;
 		_memory.Clear();
 	}
+
+	public bool WasUsed(uint registry)
+	{
+		return _memory.ContainsKey(registry);
+	}
 }

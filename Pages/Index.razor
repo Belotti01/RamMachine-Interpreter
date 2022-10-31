@@ -2,6 +2,7 @@
 @using RamMachineInterpreter.Data;
 @using System.Web;
 @using System.Text.RegularExpressions;
+@using System.Diagnostics;
 
 <PageTitle>Index</PageTitle>
 
@@ -55,9 +56,15 @@
 			base.StateHasChanged();
 			string[] output = _interpreter.Execute(inputs);
 			Output = string.Join('\n', output);
+		}catch(CommandException ex)
+		{
+			Output = "ERROR: " + ex.Message;
 		}catch(Exception ex)
 		{
-			Output = ex.Message;
+			Output = "An internal error occurred.";
+			if(Debugger.IsAttached) {
+				Output += "\n" + ex.Message;
+			}
 		}
 		IsRunning = false;
 	}
