@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using MudBlazor.Services;
 using RamMachineInterpreter.Data;
 
 namespace RamMachineInterpreter;
@@ -11,7 +12,7 @@ public class Program {
 		// Add services to the container.
 		builder.Services.AddRazorPages();
 		builder.Services.AddServerSideBlazor();
-
+		builder.Services.AddMudServices();
 		var app = builder.Build();
 
 		// Configure the HTTP request pipeline.
