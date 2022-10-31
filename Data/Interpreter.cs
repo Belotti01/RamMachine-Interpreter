@@ -234,6 +234,8 @@ public class Interpreter {
 	{
 		if(_inputs is null)
 			throw new CommandException("No inputs were provided for READ operation.", cmd);
+		if(_inputs.Count <= _nextInputIndex)
+			throw new CommandException("Not enough inputs were provided for READ operations.", cmd);
 		if(!int.TryParse(_inputs[_nextInputIndex++], out int value))
 		{
 			throw new CommandException("Non-numeric input provided for READ operation.", cmd);

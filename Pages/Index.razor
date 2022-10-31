@@ -47,7 +47,9 @@
 
 	private void Run()
 	{
-		var inputs = Input.Split('\n').ToArray();
+		var inputs = Input
+			.Split('\n')
+			.Where(x => x.Length > 0);
 		try
 		{
 			_interpreter.ParseCode(Code);
