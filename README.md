@@ -7,6 +7,8 @@ TODO:
 - Review interpreter class to be more scalable
 - Add code examples page
 - Add relevant external links
+- "Download Code" and "Export Registries" options
+- Dark Mode?
 
 Will probably start using MudBlazor for the UI at some point to avoid reinventing the wheel (and making it squared in the process)
 
