@@ -1,7 +1,7 @@
 ﻿namespace RamMachineInterpreter.Data;
 
 public class Memory {
-	public int this[int registry] {
+	public int this[uint registry] {
 		get => ReadMemory(registry);
 		set => SetMemory(registry, value);
 	}
@@ -11,25 +11,24 @@ public class Memory {
 	public int Accumulator = 0;
 	protected readonly List<int> _memory = new();
 
-	public int ReadMemory(int registry)
+	public int ReadMemory(uint registry)
 	{
 		if(registry >= _memory.Count)
 		{
 			// Registry has no assigned value - return default
 			return 0;
 		}
-		return _memory[registry];
+		return _memory[(int)registry];
 	}
 
-	public void SetMemory(int registry, int value)
+	public void SetMemory(uint registry, int value)
 	{
 		if(registry >= _memory.Count)
 		{
-			// Registry has no assigned value - return default
-			Pan(registry + 1);
+			Pan(registry);
 		}
 
-		_memory[registry] = value;
+		_memory[(int)registry] = value;
 	}
 
 	public void Reset()
@@ -38,9 +37,9 @@ public class Memory {
 		_memory.Clear();
 	}
 
-	protected void Pan(int toIndex)
+	protected void Pan(uint toIndex)
 	{
-		for(int i = _memory.Count; i < toIndex; i++)
+		for(int i = _memory.Count; i <= toIndex; i++)
 		{
 			_memory.Add(0);
 		}

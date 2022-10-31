@@ -18,8 +18,14 @@
 		<InputTextArea @bind-Value="@Input"/>
 	</div>
 
-	<button class="btn btn-primary" @onclick="Run">Run</button>
-
+	@if(IsRunning)
+	{
+			<button class="btn btn-warning" @onclick="_interpreter.Interrupt">Interrupt</button>
+	}
+	else
+	{
+			<button class="btn btn-primary" @onclick="Run">Run</button>
+	}
 	<div class="d-flex flex-column align-items-stretch">
 		<h2>Output:</h2>
 		<p>@((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@Output), "\r?\n|\r", "<br />"))</p>
@@ -36,20 +42,23 @@
 	private string Code { get; set; } = "STORE =10";
 	private string Output { get; set; } = "";
 	private string Input { get; set; } = "";
-	private Interpreter? _interpreter;
+	private bool IsRunning { get; set; }
+	private readonly Interpreter _interpreter = new();
 
 	private void Run()
 	{
-		_interpreter ??= new();
 		var inputs = Input.Split('\n').ToArray();
 		try
 		{
 			_interpreter.ParseCode(Code);
+			IsRunning = true;
+			base.StateHasChanged();
 			string[] output = _interpreter.Execute(inputs);
 			Output = string.Join('\n', output);
 		}catch(Exception ex)
 		{
 			Output = ex.Message;
 		}
+		IsRunning = false;
 	}
 }

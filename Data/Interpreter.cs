@@ -1,16 +1,19 @@
 ﻿using System.Text.RegularExpressions;
+using Microsoft.Win32;
 
 namespace RamMachineInterpreter.Data;
 
 public class Interpreter {
 	public readonly Dictionary<string, Func<Command, string?>> _operations;
 
+	bool _interrupt = false;
 	protected int _currentCommandIndex = -1;
 	public List<Command> Commands { get; } = new();
 	public Memory Memory { get; } = new();
-	public int Accumulator { get; protected set; }
 	protected List<string>? _inputs;
 	protected int _nextInputIndex = 0;
+
+	public bool IsExecuting { get; protected set; } = false;
 
 	public Interpreter() {
 		_operations = new(StringComparer.OrdinalIgnoreCase)
@@ -30,6 +33,10 @@ public class Interpreter {
 		};
 	}
 
+	public void Interrupt()
+	{
+		_interrupt = true;
+	}
 
 	public void ParseCode(string code)
 	{
@@ -55,18 +62,32 @@ public class Interpreter {
 
 	public string[] Execute(IEnumerable<string>? inputs = null)
 	{
+		_interrupt = false;
 		_inputs = inputs?.ToList();
 		_nextInputIndex = 0;
 		string? newOutput;
 		List<string> output = new();
 
-		for(_currentCommandIndex = 0; _currentCommandIndex < Commands.Count; _currentCommandIndex++) {
-			newOutput = Execute(Commands[_currentCommandIndex]);
-			if(newOutput is not null)
+		IsExecuting = true;
+		try
+		{
+			for(_currentCommandIndex = 0; _currentCommandIndex < Commands.Count; _currentCommandIndex++)
 			{
-				output.Add(newOutput);
+				if(_interrupt)
+					break;
+
+				newOutput = Execute(Commands[_currentCommandIndex]);
+				if(newOutput is not null)
+				{
+					output.Add(newOutput);
+				}
 			}
+		} catch(CommandException)
+		{
+			IsExecuting = false;
+			throw;
 		}
+		IsExecuting = false;
 
 		_currentCommandIndex = -1;
 		return output.ToArray();
@@ -91,65 +112,82 @@ public class Interpreter {
 	{
 		if(command.Value is null)
 			throw new CommandException("Expected value, registry or pointer is missing.", command);
-
+		int registry;
 		if(command.IsValuePointer)
 		{
-			// Convert from pointer to value
-			return Memory[Memory[command.Value.Value]];
+			// Convert from pointer to registry
+			if(command.Value.Value < 0)
+				throw new CommandException($"Attempted to access negative registry {command.Value.Value}.", command);
+			registry = Memory[(uint)command.Value.Value];
 		} else if(command.IsValueRegistry)
 		{
 			// Load the value from the registry
-			return Memory[command.Value.Value];
+			registry = command.Value.Value;
+		}else
+		{
+			return command.Value.Value;
 		}
-		return command.Value.Value;
+		
+		return registry < 0
+			? throw new CommandException($"Attempted to access negative registry {registry}.", command)
+			: Memory[(uint)registry];
 	}
 
-	protected int GetRegistryValue(Command command)
+	protected uint GetRegistryValue(Command command)
 	{
 		if(command.Value is null)
 			throw new CommandException("Registry or pointer value has not been specified.", command);
 
+		int registry;
 		if(command.IsValuePointer)
 		{
+			if(command.Value.Value < 0)
+				throw new CommandException($"Attempted to access negative registry {command.Value.Value}.", command);
 			// Get registry at the pointer's position
-			return Memory[command.Value.Value];
+			registry = Memory[(uint)command.Value.Value];
 		} else if(command.IsValueRegistry)
 		{
 			// Already a registry
-			return command.Value.Value;
+			registry = command.Value.Value;
+		} else
+		{
+			throw new CommandException("Registry or pointer value was expected.", command);
 		}
-		throw new CommandException("Registry or pointer value was expected.", command);
+
+		return registry < 0 
+			? throw new CommandException($"Attempted to access negative registry {registry}.", command) 
+			: (uint)registry;
 	}
 
 
 	protected string? Add(Command cmd)
 	{
-		Accumulator += GetRawValue(cmd);
+		Memory.Accumulator += GetRawValue(cmd);
 		return null;
 	}
 	protected string? Sub(Command cmd)
 	{
-		Accumulator -= GetRawValue(cmd);
+		Memory.Accumulator -= GetRawValue(cmd);
 		return null;
 	}
 	protected string? Mult(Command cmd)
 	{
-		Accumulator *= GetRawValue(cmd);
+		Memory.Accumulator *= GetRawValue(cmd);
 		return null;
 	}
 	protected string? Div(Command cmd)
 	{
-		Accumulator /= GetRawValue(cmd);
+		Memory.Accumulator /= GetRawValue(cmd);
 		return null;
 	}
 	protected string? Load(Command cmd)
 	{
-		Accumulator = GetRawValue(cmd);
+		Memory.Accumulator = GetRawValue(cmd);
 		return null;
 	}
 	protected string? Store(Command cmd)
 	{
-		Memory.SetMemory(GetRegistryValue(cmd), Accumulator);
+		Memory.SetMemory(GetRegistryValue(cmd), Memory.Accumulator);
 		return null;
 	}
 
@@ -170,14 +208,14 @@ public class Interpreter {
 
 	protected string? Jzero(Command cmd)
 	{
-		return Accumulator == 0
+		return Memory.Accumulator == 0
 			? Jump(cmd)
 			: null;
 	}
 
 	protected string? Jgtz(Command cmd)
 	{
-		return Accumulator > 0
+		return Memory.Accumulator > 0
 			? Jump(cmd)
 			: null;
 	}

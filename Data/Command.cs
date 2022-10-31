@@ -59,6 +59,11 @@ public struct Command {
 		{
 			throw new CommandException("Invalid operation value.", this);
 		}
+
+		if(IsValueRegistry && Value < 0)
+		{
+			throw new CommandException($"Negative registry index detected: {Value}", this);
+		}
 	}
 
 	public override string ToString()
