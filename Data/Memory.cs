@@ -6,6 +6,8 @@ public class Memory {
 		set => SetMemory(registry, value);
 	}
 
+	public int Size => _memory.Count;
+
 	public int Accumulator = 0;
 	protected readonly List<int> _memory = new();
 

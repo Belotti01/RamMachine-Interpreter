@@ -1,0 +1,57 @@
+﻿@using RamMachineInterpreter.Data;
+
+@if(Memory is not null)
+{
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th scope="col" class="text-center w-50">Accumulator</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td class="text-center">@Memory.Accumulator</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<table class="table table-striped table-dark table-bordered table-responsive">
+		<thead>
+			<tr>
+				<th class="text-center" colspan="11">Registries</th>
+			</tr>
+			<tr>
+				<th scope="col" class="text-center" style="width: 10%;">#</th>
+				@for(int i = 0; i < 10; i++)
+				{
+									<th scope="col" class="text-center" style="width: 9%;">@i</th>
+				}
+			</tr>
+		</thead>
+		<tbody>
+			@for(int d = 0; true; d += 10) {
+				if(Memory.Size <= d)
+					break;
+				<tr>
+							<th scope="row" class="text-end">@d - @(d + 9)</th>
+					@for(int i = 0; i < 10; i++)
+					{
+						@if (Memory.Size <= d + i)
+						{
+											<td class="text-center" >0</td>
+						}
+						else {
+											<td class="text-center" >@Memory[d+i]</td>
+						}
+					}
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+
+@code {
+	[Parameter]
+	public Memory? Memory { get; set; }
+}
