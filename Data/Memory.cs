@@ -6,42 +6,35 @@ public class Memory {
 		set => SetMemory(registry, value);
 	}
 
-	public int Size => _memory.Count;
+	public uint MaxAssignedAddress { get; protected set; }
 
 	public int Accumulator = 0;
-	protected readonly List<int> _memory = new();
+	protected readonly Dictionary<uint, int> _memory = new();
 
 	public int ReadMemory(uint registry)
 	{
-		if(registry >= _memory.Count)
+		if(_memory.TryGetValue(registry, out int value))
 		{
-			// Registry has no assigned value - return default
-			return 0;
+			return value;
 		}
-		return _memory[(int)registry];
+		// Registry has no assigned value - return default
+		return 0;
 	}
 
 	public void SetMemory(uint registry, int value)
 	{
-		if(registry >= _memory.Count)
+		if(_memory.TryAdd(registry, value))
 		{
-			Pan(registry);
+			MaxAssignedAddress = Math.Max(MaxAssignedAddress, registry);
+		}else {
+			// Registry already exists in _memory
+			_memory[registry] = value;
 		}
-
-		_memory[(int)registry] = value;
 	}
 
 	public void Reset()
 	{
 		Accumulator = 0;
 		_memory.Clear();
-	}
-
-	protected void Pan(uint toIndex)
-	{
-		for(int i = _memory.Count; i <= toIndex; i++)
-		{
-			_memory.Add(0);
-		}
 	}
 }

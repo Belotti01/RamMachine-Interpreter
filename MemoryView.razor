@@ -30,13 +30,13 @@
 		</thead>
 		<tbody>
 			@for(uint d = 0; true; d += 10) {
-				if(Memory.Size <= d)
+				if(Memory.MaxAssignedAddress < d)
 					break;
 				<tr>
 							<th scope="row" class="text-end">@d - @(d + 9)</th>
 					@for(uint i = 0; i < 10; i++)
 					{
-						@if (Memory.Size <= d + i)
+						@if (Memory.MaxAssignedAddress < d + i)
 						{
 											<td class="text-center" >0</td>
 						}
