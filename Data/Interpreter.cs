@@ -74,7 +74,10 @@ public class Interpreter {
 			for(_currentCommandIndex = 0; _currentCommandIndex < Commands.Count; _currentCommandIndex++)
 			{
 				if(_interrupt)
+				{
+					output.Add("Execution has been interrupted.");
 					break;
+				}
 
 				newOutput = Execute(Commands[_currentCommandIndex]);
 				if(newOutput is not null)

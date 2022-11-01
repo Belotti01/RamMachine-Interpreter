@@ -16,15 +16,10 @@
 	<div class="d-flex flex-column align-items-stretch">
 		<MudTextField Class="flex-fill" Lines="8" @bind-Value="@Input" Label="Input Values"/>
 	</div>
-
-	@if(IsRunning)
-	{
-			<button class="btn btn-warning" @onclick="_interpreter.Interrupt">Interrupt</button>
-	}
-	else
-	{
-			<button class="btn btn-primary" @onclick="Run">Run</button>
-	}
+	
+	<MudButton Disabled="@IsRunning" OnClick="Run" StartIcon="@Icons.Material.Filled.PlayArrow"></MudButton>
+	<MudButton Disabled="@(!IsRunning)" OnClick="_interpreter.Interrupt"  StartIcon="@Icons.Material.Filled.Square"></MudButton>
+	
 	<div class="d-flex flex-column align-items-stretch">
 		<h2>Output:</h2>
 		<p>@((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@Output), "\r?\n|\r", "<br />"))</p>
@@ -43,29 +38,47 @@
 	private string Input { get; set; } = "";
 	private bool IsRunning { get; set; }
 	private readonly Interpreter _interpreter = new();
+	private Task? _bgTask;
 
 	private void Run()
 	{
+		if (IsRunning)
+		{
+			Output = "Code is already running.\n\n" + Output;
+		}
+
 		var inputs = Input
 			.Split('\n')
 			.Where(x => x.Length > 0);
-		try
+
+		_bgTask = new Task(() =>
 		{
-			_interpreter.ParseCode(Code);
 			IsRunning = true;
-			base.StateHasChanged();
-			string[] output = _interpreter.Execute(inputs);
-			Output = string.Join('\n', output);
-		}catch(CommandException ex)
-		{
-			Output = "ERROR: " + ex.Message;
-		}catch(Exception ex)
-		{
-			Output = "An internal error occurred.";
-			if(Debugger.IsAttached) {
-				Output += "\n" + ex.Message;
+			InvokeAsync(() => base.StateHasChanged());
+			try
+			{
+				_interpreter.ParseCode(Code);
+				string[] output = _interpreter.Execute(inputs);
+				Output = string.Join('\n', output);
 			}
-		}
-		IsRunning = false;
+			catch (CommandException ex)
+			{
+				Output = "ERROR: " + ex.Message;
+			}
+			catch (Exception ex)
+			{
+				Output = "An internal error occurred.";
+				if (Debugger.IsAttached)
+				{
+					Output += "\n" + ex.Message;
+				}
+			}
+		});
+		_bgTask.ContinueWith((x) => {
+			IsRunning = false;
+			InvokeAsync(() => base.StateHasChanged());
+		});
+
+		_bgTask.Start();
 	}
 }
