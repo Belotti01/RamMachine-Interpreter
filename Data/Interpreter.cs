@@ -8,7 +8,7 @@ public class Interpreter {
 	bool _interrupt = false;
 	protected int _currentCommandIndex = -1;
 	public List<Command> Commands { get; } = new();
-	public Memory Memory { get; } = new();
+	public IMemory<long> Memory { get; } = new Memory<long>();
 	protected List<string>? _inputs;
 	protected int _nextInputIndex = 0;
 
@@ -63,7 +63,7 @@ public class Interpreter {
 	{
 		_interrupt = false;
 		_nextInputIndex = 0;
-		Memory.Reset();
+		Memory.Clear();
 	}
 
 	public string[] Execute(IEnumerable<string>? inputs = null, int delayMilliseconds = 10, Action? onLoop = null)
@@ -118,17 +118,17 @@ public class Interpreter {
 		return output;
 	}
 
-	protected int GetRawValue(Command command)
+	protected long GetRawValue(Command command)
 	{
 		if(command.Value is null)
 			throw new CommandException("Expected value, registry or pointer is missing.", command);
-		int registry;
+		long registry;
 		if(command.IsValuePointer)
 		{
 			// Convert from pointer to registry
 			if(command.Value.Value < 0)
 				throw new CommandException($"Attempted to access negative registry {command.Value.Value}.", command);
-			registry = Memory[(uint)command.Value.Value];
+			registry = Memory[(ulong)command.Value.Value];
 		} else if(command.IsValueRegistry)
 		{
 			// Load the value from the registry
@@ -140,21 +140,21 @@ public class Interpreter {
 		
 		return registry < 0
 			? throw new CommandException($"Attempted to access negative registry {registry}.", command)
-			: Memory[(uint)registry];
+			: Memory[(ulong)registry];
 	}
 
-	protected uint GetRegistryValue(Command command)
+	protected ulong GetRegistryValue(Command command)
 	{
 		if(command.Value is null)
 			throw new CommandException("Registry or pointer value has not been specified.", command);
 
-		int registry;
+		long registry;
 		if(command.IsValuePointer)
 		{
 			if(command.Value.Value < 0)
 				throw new CommandException($"Attempted to access negative registry {command.Value.Value}.", command);
 			// Get registry at the pointer's position
-			registry = Memory[(uint)command.Value.Value];
+			registry = Memory[(ulong)command.Value.Value];
 		} else if(command.IsValueRegistry)
 		{
 			// Already a registry
@@ -197,7 +197,7 @@ public class Interpreter {
 	}
 	protected string? Store(Command cmd)
 	{
-		Memory.SetMemory(GetRegistryValue(cmd), Memory.Accumulator);
+		Memory.SetRegistryValue(GetRegistryValue(cmd), Memory.Accumulator);
 		return null;
 	}
 

@@ -1,45 +1,59 @@
-﻿namespace RamMachineInterpreter.Data;
+﻿using RamMachineInterpreter.Data;
 
-public class Memory {
-	public int this[uint registry] {
-		get => ReadMemory(registry);
-		set => SetMemory(registry, value);
-	}
+namespace RamMachineInterpreter.Data;
 
-	public uint MaxAssignedAddress { get; protected set; }
-
-	public int Accumulator = 0;
-	protected readonly Dictionary<uint, int> _memory = new();
-
-	public int ReadMemory(uint registry)
+public class Memory<T> : IMemory<T> where T : struct
+{
+	/// <summary>
+	/// Get or Set the value of a registry.
+	/// </summary>
+	/// <param name="registry">The index of the registry to access.</param>
+	/// <returns>The value of the registry at the specified index, or <see langword="default"/> if
+	/// no value was assigned to it.</returns>
+	public T this[ulong registry]
 	{
-		if(_memory.TryGetValue(registry, out int value))
-		{
-			return value;
-		}
-		// Registry has no assigned value - return default
-		return 0;
+		get => GetRegistryValue(registry);
+		set => SetRegistryValue(registry, value);
 	}
+	
+	protected readonly Dictionary<ulong, T> _memory = new();
 
-	public void SetMemory(uint registry, int value)
-	{
-		if(_memory.TryAdd(registry, value))
-		{
-			MaxAssignedAddress = Math.Max(MaxAssignedAddress, registry);
-		}else {
-			// Registry already exists in _memory
-			_memory[registry] = value;
-		}
-	}
+    public T Accumulator { get; set; }
+    public ulong Size { get; protected set; } = 0;  // Set manually - more efficient than checking the _memory.Keys everytime
 
-	public void Reset()
-	{
-		Accumulator = 0;
-		_memory.Clear();
-	}
+    public void Clear()
+    {
+        Accumulator = default;
+        _memory.Clear();
+        Size = 0;
+    }
 
-	public bool WasUsed(uint registry)
-	{
-		return _memory.ContainsKey(registry);
-	}
+    public T GetRegistryValue(ulong registry)
+    {
+        if (Size < registry && _memory.TryGetValue(registry, out T value))
+        {
+            return value;
+        }
+        // Registry has no assigned value - return default
+        return default;
+    }
+
+    public bool HasValue(ulong registry)
+    {
+        return registry < Size
+            && _memory.ContainsKey(registry);
+    }
+
+    public void SetRegistryValue(ulong registry, T value)
+    {
+        if (_memory.TryAdd(registry, value))
+        {
+            Size = Math.Max(Size, registry);
+        }
+        else
+        {
+            // Registry already exists in _memory
+            _memory[registry] = value;
+        }
+    }
 }

@@ -1,4 +1,5 @@
-﻿@using RamMachineInterpreter.Data;
+﻿@typeparam TValue
+@using RamMachineInterpreter.Data;
 
 @if(Memory is not null)
 {
@@ -29,15 +30,15 @@
 			</tr>
 		</thead>
 		<tbody>
-			@for(uint d = 0; d <= Memory.MaxAssignedAddress; d += 10)
+			@for(ulong d = 0; d <= Memory.Size; d += 10)
 			{
-				uint td = d;
+				ulong td = d;
 				<tr>
 					<th scope="row" class="text-end">@d - @(d + 9)</th>
-					@for(uint i = 0; i < 10; i++)
+					@for(ulong i = 0; i < 10; i++)
 					{
-						uint ti = i;
-						@if (Memory.WasUsed(td+ti))
+						ulong ti = i;
+						@if (Memory.HasValue(td+ti))
 						{
 								<td class="text-center fw-bold"><MudText Class="bg-gradient fw-bolder">@Memory[td+ti]</MudText></td>
 						}
@@ -55,5 +56,5 @@
 
 @code {
 	[Parameter]
-	public Memory? Memory { get; set; }
+	public IMemory<TValue>? Memory { get; set; }
 }
