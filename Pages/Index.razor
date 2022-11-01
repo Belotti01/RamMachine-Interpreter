@@ -10,26 +10,52 @@
 <MudText Typo="Typo.h1" Align="Align.Center" GutterBottom>RamMachine Interpreter</MudText>
 
 <EditForm Model="@Code" class="d-flex flex-column align-items-stretch">
-	<div class="d-flex flex-column w-25">
-		<p>Delay between each instruction (seconds):</p>
-		<MudSlider T="double" Step="0.1" Min="0" Max="2" @bind-Value="Delay" ValueLabel/>
-	</div>
 
-	<div class="d-flex flex-column align-items-stretch">
-		<MudTextField Class="flex-fill" Lines="24" @bind-Value="@Code" Label="Code"/>
-	</div>
-	<div class="d-flex flex-column align-items-stretch">
-		<MudTextField Class="flex-fill" Lines="8" @bind-Value="@Input" Label="Input Values"/>
-	</div>
-	
-	<MudButton Disabled="@IsRunning" OnClick="Run" StartIcon="@Icons.Material.Filled.PlayArrow"></MudButton>
-	<MudButton Disabled="@(!IsRunning)" OnClick="_interpreter.Interrupt"  StartIcon="@Icons.Material.Filled.Square"></MudButton>
-	
+	<MudExpansionPanels Elevation="1" Square Class="mb-5">
+	<!-- SETTINGS -->
+		<MudExpansionPanel Text="Settings" Class="">
+			<ChildContent>
+				<MudGrid>
+					<MudItem md="3">
+						<div class="d-flex flex-column">
+							<p>Delay between each instruction (seconds):</p>
+							<MudSlider T="double" Step="0.1" Min="0" Max="3" @bind-Value="Delay" ValueLabel/>
+						</div>
+					</MudItem>
+				</MudGrid>
+			</ChildContent>
+		</MudExpansionPanel>
+	</MudExpansionPanels>
+
+
+	<!-- CODE & INPUTS -->
+	<MudGrid>
+		<MudItem md="8" sm="7" xs="12">
+			<MudTextField Lines="24" @bind-Value="@Code" Label="Code"/>
+		</MudItem>	
+		<MudItem md="4" sm="5" xs="12">
+			<MudTextField Lines="24" @bind-Value="@Input" Label="Input Values"/>
+		</MudItem>	
+	</MudGrid>
+
+
+	<MudGrid>
+		<MudItem md="8" sm="7" xs="12">
+			<MudButton FullWidth Disabled="@IsRunning" OnClick="Run" StartIcon="@Icons.Material.Filled.PlayArrow">Run</MudButton>
+		</MudItem>
+		<MudItem md="4" sm="5" xs="12">
+			<MudButton FullWidth Disabled="@(!IsRunning)" OnClick="_interpreter.Interrupt" StartIcon="@Icons.Material.Filled.Square">Interrupt</MudButton>
+		</MudItem>
+	</MudGrid>
+
+	<MudDivider DividerType="DividerType.FullWidth"/>
+
 	<div class="d-flex flex-column align-items-stretch">
 		<h2>Output:</h2>
-		<p>@((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@Output), "\r?\n|\r", "<br />"))</p>
+		<MudText GutterBottom>@((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@Output), "\r?\n|\r", "<br />"))</MudText>
 	</div>
 
+	<hr/>
 	<div class="d-flex flex-column align-items-stretch">
 		<h2>Memory:</h2>
 		<MemoryView Memory="_interpreter?.Memory"/>
@@ -39,9 +65,13 @@
 
 @code {
 	private double Delay { get; set; } = 0.1;
-	private string Code { get; set; } = "STORE =10";
+	private string Code { get; set; } = 
+		"READ 1  \t# Store the first input in 1\n" + 
+		"LOAD =1\t# Set the Accumulator to =1\n" + 
+		"STORE *1\t# Save the Accumulator value into the registry pointed at by 1\n" +
+		"HALT";
 	private string Output { get; set; } = "";
-	private string Input { get; set; } = "";
+	private string Input { get; set; } = "13";
 	private bool IsRunning { get; set; }
 	private readonly Interpreter _interpreter = new();
 	private Task? _bgTask;
@@ -52,7 +82,7 @@
 		{
 			Output = "Code is already running.\n\n" + Output;
 		}
-		Output = "";
+		Output = "Executing...";
 		var inputs = Input
 			.Split('\n')
 			.Where(x => x.Length > 0);
@@ -87,4 +117,5 @@
 
 		_bgTask.Start();
 	}
+
 }
