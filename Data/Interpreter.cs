@@ -59,12 +59,17 @@ public class Interpreter {
 		}
 	}
 
-	public string[] Execute(IEnumerable<string>? inputs = null)
+	public void Reset()
 	{
 		_interrupt = false;
-		_inputs = inputs?.ToList();
 		_nextInputIndex = 0;
 		Memory.Reset();
+	}
+
+	public string[] Execute(IEnumerable<string>? inputs = null, int delayMilliseconds = 10, Action? onLoop = null)
+	{
+		Reset();
+		_inputs = inputs?.ToList();
 		string? newOutput;
 		List<string> output = new();
 
@@ -79,11 +84,13 @@ public class Interpreter {
 					break;
 				}
 
+				Thread.Sleep(delayMilliseconds);
 				newOutput = Execute(Commands[_currentCommandIndex]);
 				if(newOutput is not null)
 				{
 					output.Add(newOutput);
 				}
+				onLoop?.Invoke();
 			}
 		} catch(CommandException)
 		{

@@ -10,6 +10,11 @@
 <MudText Typo="Typo.h1" Align="Align.Center" GutterBottom>RamMachine Interpreter</MudText>
 
 <EditForm Model="@Code" class="d-flex flex-column align-items-stretch">
+	<div class="d-flex flex-column w-25">
+		<p>Delay between each instruction (seconds):</p>
+		<MudSlider T="double" Step="0.1" Min="0" Max="2" @bind-Value="Delay" ValueLabel/>
+	</div>
+
 	<div class="d-flex flex-column align-items-stretch">
 		<MudTextField Class="flex-fill" Lines="24" @bind-Value="@Code" Label="Code"/>
 	</div>
@@ -33,6 +38,7 @@
 
 
 @code {
+	private double Delay { get; set; } = 0.1;
 	private string Code { get; set; } = "STORE =10";
 	private string Output { get; set; } = "";
 	private string Input { get; set; } = "";
@@ -46,7 +52,7 @@
 		{
 			Output = "Code is already running.\n\n" + Output;
 		}
-
+		Output = "";
 		var inputs = Input
 			.Split('\n')
 			.Where(x => x.Length > 0);
@@ -58,7 +64,7 @@
 			try
 			{
 				_interpreter.ParseCode(Code);
-				string[] output = _interpreter.Execute(inputs);
+				string[] output = _interpreter.Execute(inputs, (int)(Delay * 1000), () => InvokeAsync(() => StateHasChanged()));
 				Output = string.Join('\n', output);
 			}
 			catch (CommandException ex)
