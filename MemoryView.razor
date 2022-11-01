@@ -11,7 +11,7 @@
 		</thead>
 		<tbody>
 			<tr>
-					<td class="text-center"><MudText>@Memory.Accumulator</MudText></td>
+				<td class="text-center"><MudText>@Memory.Accumulator</MudText></td>
 			</tr>
 		</tbody>
 	</table>
@@ -30,7 +30,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			@for(ulong d = 0; d <= Memory.Size; d += 10)
+			@for(ulong d = 0; d < Memory.Size; d += 10)
 			{
 				ulong td = d;
 				<tr>

@@ -61,9 +61,9 @@ public class Interpreter {
 
 	public void Reset()
 	{
+		Memory.Clear();
 		_interrupt = false;
 		_nextInputIndex = 0;
-		Memory.Clear();
 	}
 
 	public string[] Execute(IEnumerable<string>? inputs = null, int delayMilliseconds = 10, Action? onLoop = null)

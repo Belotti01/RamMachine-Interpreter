@@ -30,7 +30,7 @@ public class Memory<T> : IMemory<T> where T : struct
 
     public T GetRegistryValue(ulong registry)
     {
-        if (Size < registry && _memory.TryGetValue(registry, out T value))
+        if (registry < Size && _memory.TryGetValue(registry, out T value))
         {
             return value;
         }
@@ -48,7 +48,7 @@ public class Memory<T> : IMemory<T> where T : struct
     {
         if (_memory.TryAdd(registry, value))
         {
-            Size = Math.Max(Size, registry);
+            Size = Math.Max(Size, registry + 1);
         }
         else
         {
