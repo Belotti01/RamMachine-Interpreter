@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using RamMachineInterpreter.Components
 @using RamMachineInterpreter.Data;
 @using System.Web;
 @using System.Text.RegularExpressions;
@@ -24,6 +25,9 @@
 					</MudItem>
 				</MudGrid>
 			</ChildContent>
+		</MudExpansionPanel>
+		<MudExpansionPanel Text="Instruction Set">
+			<InstructionsView Set="@_interpreter.InstructionSet"/>
 		</MudExpansionPanel>
 	</MudExpansionPanels>
 

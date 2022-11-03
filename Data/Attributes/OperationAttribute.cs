@@ -1,9 +1,13 @@
-﻿namespace RamMachineInterpreter.Data;
+﻿using System.ComponentModel;
+
+namespace RamMachineInterpreter.Data;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class OperationAttribute : Attribute {
+	[DisplayName("Operation")]
 	public string Command { get; }
-	public string? Description { get; }
+	[DisplayName("Description")]
+	public virtual string? Description { get; }
 
 	public OperationAttribute(string command)
 	{

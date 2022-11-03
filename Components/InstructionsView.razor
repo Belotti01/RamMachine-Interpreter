@@ -1,0 +1,85 @@
+﻿@*@typeparam TMemory where TMemory : IMemory<T>
+@typeparam TAttribute where TAttribute : OperationAttribute
+@typeparam TOperation where TOperation : IOperation<T>
+@typeparam T where T : struct
+@typeparam TInstructionSet where TInstructionSet : InstructionSet<TMemory, TOperation, TAttribute, T>*@
+
+@using RamMachineInterpreter.Data
+@using System.ComponentModel;
+@using System.Reflection;
+
+
+<MudTable Items="Grid" RowsPerPage="20" AllowUnsorted Hover Virtualize>
+	<HeaderContent>
+		@for(int i = 0; i < Headers.Count; i++)
+		{
+			int ti = i;
+			<MudTh><MudTableSortLabel SortBy="(List<object?> x) => ToDisplay(x[ti])">@Headers[ti]</MudTableSortLabel></MudTh>
+		}
+	</HeaderContent>
+	<RowTemplate>
+		@for(int i = 0; i < Headers.Count; i++) 
+		{
+			int ti = i;
+			<MudTd DataLabel="@Headers[ti]">@ToDisplay(context[ti])</MudTd>
+		}
+	</RowTemplate>
+	<PagerContent>
+		<MudTablePager HideRowsPerPage />
+	</PagerContent>
+</MudTable>
+
+@code {
+	[Parameter]
+	public RamMachineInstructionSet? Set { get; set; }
+	public List<string> Headers { get; private set; } = new();
+	public List<List<object?>> Grid { get; private set; } = new();
+
+	protected string ToDisplay(object? value)
+	{
+		return value switch
+		{
+			bool b => b ? "Yes" : "No",
+			string s => s,
+			_ => value?.ToString() ?? ""
+		};
+	}
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		if (Set is null)
+			return;
+
+		var opAttributes = Set.OperationAttributes.Values.ToArray();
+
+		if (!opAttributes.Any())
+			return;
+
+		Headers = opAttributes
+			.First()
+			.GetType()
+			.GetProperties()
+			.Select(x => x.GetCustomAttribute<DisplayNameAttribute>(true)?.DisplayName)
+			.Where(x => x is not null)
+			.ToList()!;
+		int opIndex = Headers.FindIndex(x => x == "Operation");
+
+		Grid = opAttributes
+			.Select(x => x
+				.GetType()
+				.GetProperties()
+				.Where(p => p.GetCustomAttribute<DisplayNameAttribute>(true) is not null)
+				.Select(p => p.GetValue(x))
+				.ToList()
+			).OrderBy(x => x[opIndex])
+			.ToList();
+
+		// Move OPERATION column at the start
+		for(int i = 0; i < Grid.Count; i++)
+		{
+			(Grid[i][opIndex], Grid[i][0]) = (Grid[i][0], Grid[i][opIndex]);
+		}
+		(Headers[0], Headers[opIndex]) = (Headers[opIndex], Headers[0]);
+	}
+}
