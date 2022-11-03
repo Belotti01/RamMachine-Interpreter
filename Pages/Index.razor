@@ -44,7 +44,7 @@
 			<MudButton FullWidth Disabled="@IsRunning" OnClick="Run" StartIcon="@Icons.Material.Filled.PlayArrow">Run</MudButton>
 		</MudItem>
 		<MudItem md="4" sm="5" xs="12">
-			<MudButton FullWidth Disabled="@(!IsRunning)" OnClick="_interpreter.Interrupt" StartIcon="@Icons.Material.Filled.Square">Interrupt</MudButton>
+			<MudButton FullWidth Disabled="@(!IsRunning)" OnClick="_interpreter.StopExecutionAsync" StartIcon="@Icons.Material.Filled.Square">Interrupt</MudButton>
 		</MudItem>
 	</MudGrid>
 
@@ -63,7 +63,7 @@
 </EditForm>
 
 
-@code {
+	@code {
 	private double Delay { get; set; } = 0.1;
 	private string Code { get; set; } = 
 		"READ 1  \t# Store the first input in 1\n" + 
@@ -72,9 +72,9 @@
 		"HALT";
 	private string Output { get; set; } = "";
 	private string Input { get; set; } = "13";
-	private bool IsRunning { get; set; }
-	private readonly Interpreter _interpreter = new();
-	private Task? _bgTask;
+	private bool IsRunning => _interpreter.IsExecuting;
+	private readonly RamMachineInterpreter _interpreter = new();
+	private Task? _bgTask, _refresher;
 
 	private void Run()
 	{
@@ -82,20 +82,38 @@
 		{
 			Output = "Code is already running.\n\n" + Output;
 		}
+
+		_interpreter.Reset();
 		Output = "Executing...";
 		var inputs = Input
 			.Split('\n')
 			.Where(x => x.Length > 0);
 
-		_bgTask = new Task(() =>
+		string[] code = Code.Split('\n');
+		var errorLines = _interpreter.LoadCode(code);
+
+		if(errorLines.Length > 0)
 		{
-			IsRunning = true;
-			InvokeAsync(() => base.StateHasChanged());
+			Output = "Parsing failed:" + string.Join("\n\n", errorLines);
+			return;
+		}
+
+		_refresher = new(async() =>
+		{
+			int delay = Math.Min(10, (int)(Delay*1000));
+			while(_interpreter.IsExecuting)
+			{
+				await Task.Delay(delay);
+				await InvokeAsync(() => StateHasChanged());
+			}
+		});
+		_refresher.Start();
+		_bgTask = new Task(async() =>
+		{
 			try
 			{
-				_interpreter.ParseCode(Code);
-				string[] output = _interpreter.Execute(inputs, (int)(Delay * 1000), () => InvokeAsync(() => StateHasChanged()));
-				Output = string.Join('\n', output);
+				var outputs = await _interpreter.ExecuteAsync(inputs);
+				Output = string.Join("\n", outputs);
 			}
 			catch (CommandException ex)
 			{
@@ -106,12 +124,13 @@
 				Output = "An internal error occurred.";
 				if (Debugger.IsAttached)
 				{
-					Output += "\n" + ex.Message;
+					Output += "\n" + ex.ToString();
 				}
 			}
+			await InvokeAsync(() => StateHasChanged());
 		});
+		
 		_bgTask.ContinueWith((x) => {
-			IsRunning = false;
 			InvokeAsync(() => base.StateHasChanged());
 		});
 

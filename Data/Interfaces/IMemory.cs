@@ -12,6 +12,7 @@ public interface IMemory<T> {
 		set => SetRegistryValue(registry, value);
 	}
 	
+	public int InstructionRegister { get; set;  }
 	public T Accumulator { get; set; }
 	/// <summary>
 	/// The highest occupied memory index.

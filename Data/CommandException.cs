@@ -1,6 +1,7 @@
 ﻿namespace RamMachineInterpreter.Data;
 
 public class CommandException : Exception {
-	public CommandException(string message, Command command) : base($"{message}\n{command}") { }
+	public int CodeLine { get; } = -1;
 
+	public CommandException(string message, object command) : base($"{message}\n{command}") { }
 }
