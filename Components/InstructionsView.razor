@@ -1,13 +1,13 @@
-﻿@*@typeparam TMemory where TMemory : IMemory<T>
-@typeparam TAttribute where TAttribute : OperationAttribute
+﻿@typeparam TAttribute where TAttribute : OperationAttribute
 @typeparam TOperation where TOperation : IOperation<T>
+@typeparam TInstructionSet where TInstructionSet : IInstructionSet<TOperation, TAttribute, T>
 @typeparam T where T : struct
-@typeparam TInstructionSet where TInstructionSet : InstructionSet<TMemory, TOperation, TAttribute, T>*@
 
 @using RamMachineInterpreter.Data
 @using System.ComponentModel;
 @using System.Reflection;
-
+@using System.ComponentModel.DataAnnotations;
+@using System.Diagnostics.CodeAnalysis;
 
 <MudTable Items="Grid" RowsPerPage="20" AllowUnsorted Hover Virtualize>
 	<HeaderContent>
@@ -30,13 +30,14 @@
 </MudTable>
 
 @code {
-	[Parameter]
-	public RamMachineInstructionSet? Set { get; set; }
+	[Parameter, Required, NotNull]
+	public TInstructionSet? InstructionSet { get; set; }
 	public List<string> Headers { get; private set; } = new();
 	public List<List<object?>> Grid { get; private set; } = new();
 
 	protected string ToDisplay(object? value)
 	{
+		// Add custom type-to-string conversions here to convert the data in the grid to natural language
 		return value switch
 		{
 			bool b => b ? "Yes" : "No",
@@ -48,10 +49,10 @@
 	protected override void OnInitialized()
 	{
 		base.OnInitialized();
-		if (Set is null)
+		if(InstructionSet is null)
 			return;
 
-		var opAttributes = Set.OperationAttributes.Values.ToArray();
+		var opAttributes = InstructionSet.OperationAttributes.Values.ToArray();
 
 		if (!opAttributes.Any())
 			return;

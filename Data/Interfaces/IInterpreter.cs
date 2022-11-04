@@ -1,13 +1,14 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RamMachineInterpreter.Data;
 
 public interface IInterpreter<TMemory, TInstructionSet, TOperation, TAttribute, T>
-    where TMemory : IMemory<T>
-    where TInstructionSet : IInstructionSet<TOperation, TAttribute, T>
-    where TOperation : IOperation<T>
-    where T : struct
-    where TAttribute : OperationAttribute {
+	where TOperation : IOperation<T>
+	where T : struct
+	where TMemory : IMemory<T>
+	where TAttribute : OperationAttribute
+	where TInstructionSet : IInstructionSet<TOperation, TAttribute, T> {
 	public TInstructionSet InstructionSet { get; }
     public TMemory Memory { get; }
     public List<TOperation> Instructions { get; }

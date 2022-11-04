@@ -6,11 +6,12 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 	: IInterpreter<TMemory, TInstructionSet, TOperation, TAttribute, T>
 	where TOperation : IOperation<T>
 	where T : struct
-	where TMemory : IMemory<T>, new()
+	where TMemory : IMemory<T>
 	where TAttribute : OperationAttribute
-	where TInstructionSet : IInstructionSet<TOperation, TAttribute, T> {
-	public TInstructionSet InstructionSet { get; protected init; }
-	public TMemory Memory { get; } = new();
+	where TInstructionSet : IInstructionSet<TOperation, TAttribute, T> 
+{
+	public abstract TInstructionSet InstructionSet { get; protected set; }
+	public abstract TMemory Memory { get; protected set; }
 	public int Delay { get; set; } = 10;
 	public List<TOperation> Instructions { get; } = new();
 	protected bool _interrupted = false;
@@ -19,15 +20,6 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 	public string[]? Inputs { get; protected set; }
 	public int NextInputIndex { get; set; }
 
-	public Interpreter()
-	{
-		// Note: When (or if) generic constructor constraints with parameters will be supported, add:
-		//		where TInstructionSet : new(TMemory)
-		//  to the class definition, and replace the line below with
-		//		InstructionsSet = new(Memory);
-		InstructionSet = (TInstructionSet)Activator.CreateInstance(typeof(TInstructionSet), this, Memory)!;
-	}
-	
 	public async Task<string[]> ExecuteAsync(IEnumerable<string> inputs)
 	{
 		Inputs = inputs.ToArray();

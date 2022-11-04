@@ -1,0 +1,153 @@
+﻿@using RamMachineInterpreter.Data
+@using System.ComponentModel.DataAnnotations;
+@using System.Diagnostics.CodeAnalysis;
+@using System.Diagnostics;
+@using System.Web;
+@using System.Text.RegularExpressions;
+
+@typeparam TInterpreter where TInterpreter : IInterpreter<TMemory, TInstructionSet, TOperation, TAttribute, T>, new()
+@typeparam TMemory where TMemory : IMemory<T>
+@typeparam TInstructionSet where TInstructionSet : IInstructionSet<TOperation, TAttribute, T>
+@typeparam TAttribute where TAttribute : OperationAttribute
+@typeparam TOperation where TOperation : IOperation<T>
+@typeparam T where T : struct
+
+
+<MudText Typo="Typo.h1" Align="Align.Center" GutterBottom>@Title</MudText>
+
+@if (IsLoading)
+{
+	<div class="w-100 d-flex align-items-center">
+		<MudProgressCircular Size="Size.Large" Indeterminate Class="m-auto"/>
+	</div>
+}else
+{
+	<EditForm Model="@Code" class="d-flex flex-column align-items-stretch">
+		<MudExpansionPanels Elevation="1" Square Class="mb-5" MultiExpansion>
+		<!-- SETTINGS -->
+			<MudExpansionPanel Text="Settings" Class="">
+				<ChildContent>
+					<MudGrid>
+						<MudItem md="3">
+							<div class="d-flex flex-column">
+								<p>Delay between each instruction (seconds):</p>
+								<MudSlider T="double" Step="0.1" Min="0" Max="3" @bind-Value="Delay" ValueLabel/>
+							</div>
+						</MudItem>
+					</MudGrid>
+				</ChildContent>
+			</MudExpansionPanel>
+			<MudExpansionPanel Text="Instruction Set">
+				<InstructionsView InstructionSet="Interpreter.InstructionSet" T="T" TInstructionSet="TInstructionSet" TAttribute="TAttribute" TOperation="TOperation"/>
+			</MudExpansionPanel>
+		</MudExpansionPanels>
+
+
+		<!-- CODE & INPUTS -->
+		<MudGrid>
+			<MudItem md="8" sm="7" xs="12">
+				<MudTextField Lines="24" @bind-Value="@Code" Label="Code"/>
+			</MudItem>	
+			<MudItem md="4" sm="5" xs="12">
+				<MudTextField Lines="24" @bind-Value="@Input" Label="Input Values"/>
+			</MudItem>	
+		</MudGrid>
+
+
+		<MudGrid>
+			<MudItem md="8" sm="7" xs="12">
+				<MudButton FullWidth Disabled="@IsRunning" OnClick="Run" StartIcon="@Icons.Material.Filled.PlayArrow">Run</MudButton>
+			</MudItem>
+			<MudItem md="4" sm="5" xs="12">
+				<MudButton FullWidth Disabled="@(!IsRunning)" OnClick="Interpreter.StopExecutionAsync" StartIcon="@Icons.Material.Filled.Square">Interrupt</MudButton>
+			</MudItem>
+		</MudGrid>
+
+		<MudDivider DividerType="DividerType.FullWidth"/>
+
+		<div class="d-flex flex-column align-items-stretch">
+			<h2>Output:</h2>
+			<MudText GutterBottom>@((MarkupString)Regex.Replace(HttpUtility.HtmlEncode(@Output), "\r?\n|\r", "<br />"))</MudText>
+			</div>
+
+			<hr/>
+			<div class="d-flex flex-column align-items-stretch">
+				<h2>Memory:</h2>
+				<MemoryView Memory="Interpreter.Memory"/>
+			</div>
+	</EditForm>
+}
+
+	@code {
+	bool IsLoading => Interpreter is null;
+
+	[Parameter, Required, NotNull]
+	public string? Title { get; set; }
+	public TInterpreter Interpreter { get; set; } = new();
+	private double Delay { get; set; } = 0.1;
+	private string Code { get; set; } = "";
+	private string Output { get; set; } = "";
+	private string Input { get; set; } = "";
+	private bool IsRunning => Interpreter?.IsExecuting ?? false;
+	private Task? _bgTask, _refresher;
+
+	private void Run()
+	{
+		if(IsRunning)
+		{
+			Output = "Code is already running.\n\n" + Output;
+		}
+
+		Interpreter.Reset();
+		Output = "Executing...";
+		var inputs = Input
+			.Split('\n')
+			.Where(x => x.Length > 0);
+
+		string[] code = Code.Split('\n');
+		var errorLines = Interpreter.LoadCode(code);
+
+		if(errorLines.Length > 0)
+		{
+			Output = "Parsing failed:" + string.Join("\n\n", errorLines);
+			return;
+		}
+
+		_refresher = new(async () =>
+		{
+			int delay = Math.Min(10, (int)(Delay * 1000));
+			while(Interpreter.IsExecuting)
+			{
+				await Task.Delay(delay);
+				await InvokeAsync(() => StateHasChanged());
+			}
+		});
+		_refresher.Start();
+		_bgTask = new Task(async () =>
+		{
+			try
+			{
+				var outputs = await Interpreter.ExecuteAsync(inputs);
+				Output = string.Join("\n", outputs);
+			} catch(CommandException ex)
+			{
+				Output = "ERROR: " + ex.Message;
+			} catch(Exception ex)
+			{
+				Output = "An internal error occurred.";
+				if(Debugger.IsAttached)
+				{
+					Output += "\n" + ex.ToString();
+				}
+			}
+			await InvokeAsync(() => StateHasChanged());
+		});
+
+		_bgTask.ContinueWith((x) =>
+		{
+			InvokeAsync(() => base.StateHasChanged());
+		});
+
+		_bgTask.Start();
+	}
+}

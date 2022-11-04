@@ -3,16 +3,22 @@ using System.Reflection;
 
 namespace RamMachineInterpreter.Data;
 
-public abstract class InstructionSet<TMemory, TOperation, TAttribute, T> : IInstructionSet<TOperation, TAttribute, T>
-	where T : struct
+public abstract class InstructionSet<TInterpreter, TMemory, TSelf, TOperation, TAttribute, T> 
+	: IInstructionSet<TOperation, TAttribute, T>
+	where TInterpreter : IInterpreter<TMemory, TSelf, TOperation, TAttribute, T>
 	where TOperation : IOperation<T>
+	where T : struct
+	where TMemory : IMemory<T>
 	where TAttribute : OperationAttribute
-	where TMemory : IMemory<T> {
+	where TSelf : IInstructionSet<TOperation, TAttribute, T> {
 	public ReadOnlyDictionary<string, Func<TOperation, string?>> Operations { get; private set; }
 	public ReadOnlyDictionary<string, TAttribute> OperationAttributes { get; private set; }
-	public TMemory Memory { get; private set; }
+	protected IMemory<T> Memory => Interpreter.Memory;
+	protected TInterpreter Interpreter { get; set; }
 
-	public InstructionSet(TMemory memory, bool isCaseSensitive = false) {
+	public InstructionSet(TInterpreter interpreter, bool isCaseSensitive = false) {
+		Interpreter = interpreter;
+		
 		StringComparer comparer = isCaseSensitive 
 			? StringComparer.Ordinal 
 			: StringComparer.OrdinalIgnoreCase;
@@ -43,7 +49,6 @@ public abstract class InstructionSet<TMemory, TOperation, TAttribute, T> : IInst
 			}
 		}
 
-		Memory = memory;
 		Operations = new(operations);
 		OperationAttributes = new(operationAttributes);
 	}

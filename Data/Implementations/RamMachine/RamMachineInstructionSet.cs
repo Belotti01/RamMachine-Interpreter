@@ -1,12 +1,9 @@
 ﻿namespace RamMachineInterpreter.Data;
 
-public class RamMachineInstructionSet : InstructionSet<RamMachineMemory, RamMachineOperation, RamMachineOperationAttribute, long> {
-	protected RamMachineInterpreter Interpreter { get; init; }
-	
-	public RamMachineInstructionSet(RamMachineInterpreter interpreter, RamMachineMemory memory) 
-		: base(memory, false)
+public class RamMachineInstructionSet : InstructionSet<RamMachineInterpreter, RamMachineMemory, RamMachineInstructionSet, RamMachineOperation, RamMachineOperationAttribute, long> {
+	public RamMachineInstructionSet(RamMachineInterpreter interpreter) 
+		: base(interpreter, false)
 	{
-		Interpreter = interpreter;
 	}
 
 	protected long GetRegistryValue(RamMachineOperation operation)
