@@ -80,7 +80,6 @@
 
 @code {
 	private const int MIN_DELAY = 0, MAX_DELAY = 5000, DELAY_STEP = 200;
-	private const int MIN_DELAY_BETWEEN_OPERATIONS = 10;
 	bool IsLoading => Interpreter is null;
 
 	[Parameter, Required, NotNull]
@@ -115,12 +114,11 @@
 			return;
 		}
 
-		int delay = Math.Min(MIN_DELAY_BETWEEN_OPERATIONS, (int)(Delay * 1000));
 		_refresher = new(async () =>
 		{
 			while(Interpreter.IsExecuting)
 			{
-				await Task.Delay(delay);
+				await Task.Delay(Interpreter.Delay);
 				await InvokeAsync(() => StateHasChanged());
 			}
 		});
@@ -129,7 +127,6 @@
 		{
 			try
 			{
-				Interpreter.Delay = delay;
 				var outputs = await Interpreter.ExecuteAsync(inputs);
 				Output = string.Join("\n", outputs);
 			} catch(CommandException ex)
@@ -158,11 +155,9 @@
 	{
 		int ticks = 1 + (MAX_DELAY - MIN_DELAY) / DELAY_STEP;
 		string[] labels = new string[ticks];
-		int position = 1;
+		int position = 0;
 
-		labels[0] = $"{MIN_DELAY_BETWEEN_OPERATIONS}ms";
-
-		for(int i = MIN_DELAY + DELAY_STEP; i <= MAX_DELAY; i += DELAY_STEP)
+		for(int i = MIN_DELAY; i <= MAX_DELAY; i += DELAY_STEP)
 		{
 			labels[position] = i % 1000 == 0
 				? $"{i / 1000}s"
