@@ -30,8 +30,8 @@
 					<MudGrid>
 						<MudItem md="3">
 							<div class="d-flex flex-column">
-								<p>Delay between each instruction (seconds):</p>
-								<MudSlider T="double" Step="0.1" Min="0" Max="3" @bind-Value="Delay" ValueLabel/>
+								<p>Delay between each instruction:</p>
+								<MudSlider T="int" Step="@DELAY_STEP" Min="@MIN_DELAY" Max="@MAX_DELAY" TickMarks TickMarkLabels="@GetDelayLabels()" @bind-Value="@Interpreter.Delay" />
 							</div>
 						</MudItem>
 					</MudGrid>
@@ -78,7 +78,9 @@
 	</EditForm>
 }
 
-	@code {
+@code {
+	private const int MIN_DELAY = 0, MAX_DELAY = 5000, DELAY_STEP = 200;
+	private const int MIN_DELAY_BETWEEN_OPERATIONS = 10;
 	bool IsLoading => Interpreter is null;
 
 	[Parameter, Required, NotNull]
@@ -113,9 +115,9 @@
 			return;
 		}
 
+		int delay = Math.Min(MIN_DELAY_BETWEEN_OPERATIONS, (int)(Delay * 1000));
 		_refresher = new(async () =>
 		{
-			int delay = Math.Min(10, (int)(Delay * 1000));
 			while(Interpreter.IsExecuting)
 			{
 				await Task.Delay(delay);
@@ -127,6 +129,7 @@
 		{
 			try
 			{
+				Interpreter.Delay = delay;
 				var outputs = await Interpreter.ExecuteAsync(inputs);
 				Output = string.Join("\n", outputs);
 			} catch(CommandException ex)
@@ -149,5 +152,24 @@
 		});
 
 		_bgTask.Start();
+	}
+
+	public string[] GetDelayLabels()
+	{
+		int ticks = 1 + (MAX_DELAY - MIN_DELAY) / DELAY_STEP;
+		string[] labels = new string[ticks];
+		int position = 1;
+
+		labels[0] = $"{MIN_DELAY_BETWEEN_OPERATIONS}ms";
+
+		for(int i = MIN_DELAY + DELAY_STEP; i <= MAX_DELAY; i += DELAY_STEP)
+		{
+			labels[position] = i % 1000 == 0
+				? $"{i / 1000}s"
+				: "";
+			position++;
+		}
+
+		return labels;
 	}
 }
