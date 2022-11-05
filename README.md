@@ -11,6 +11,17 @@
 - TODO: Code importation and exportation
 - Implement moar languages (Brainfuck maybe?)
 
+## Running the Program
+### Requirements 
+- The [.NET6 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+
+### How to Run:
+1. Download the [latest release](https://github.com/Belotti01/RamMachine-Interpreter/tags) and extract the contents of the .zip
+2. Start the **RamMachineInterpreter.exe** file
+3. Open the page https://localhost:5001
+
+NOTE: if the port is already in use, it may be different from 5001. If so, just check the console to identify which port the software is using.
+
 # RamMachine Interpreter
 Software used to write and execute RamMachine code, in an environment supporting a dynamic view of the memory state, code syntax checking and runtime error reporting, with all the information needed to identify errors.
 
