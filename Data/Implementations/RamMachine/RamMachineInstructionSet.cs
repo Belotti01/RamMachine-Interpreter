@@ -1,7 +1,8 @@
 ﻿namespace RamMachineInterpreter.Data;
 
 public class RamMachineInstructionSet : InstructionSet<RamMachineInterpreter, RamMachineMemory, RamMachineInstructionSet, RamMachineOperation, RamMachineOperationAttribute, long> {
-	public RamMachineInstructionSet(RamMachineInterpreter interpreter) 
+
+	public RamMachineInstructionSet(RamMachineInterpreter interpreter)
 		: base(interpreter, false)
 	{
 	}
@@ -147,5 +148,4 @@ public class RamMachineInstructionSet : InstructionSet<RamMachineInterpreter, Ra
 		Memory.InstructionRegister = int.MaxValue;
 		return null;
 	}
-
 }

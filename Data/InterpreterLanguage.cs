@@ -1,10 +1,7 @@
-﻿using System;
-
-namespace RamMachineInterpreter.Data;
+﻿namespace RamMachineInterpreter.Data;
 
 public class InterpreterLanguage<T>
-	where T : struct 
-{
+	where T : struct {
 	public string Name { get; protected set; }
 	public string? Description { get; set; }
 	public IInterpreter<IMemory<T>, IInstructionSet<IOperation<T>, OperationAttribute, T>, IOperation<T>, OperationAttribute, T> Interpreter { get; protected set; }

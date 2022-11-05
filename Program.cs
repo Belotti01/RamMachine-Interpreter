@@ -1,10 +1,9 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using MudBlazor.Services;
-using RamMachineInterpreter.Data;
 
 namespace RamMachineInterpreter;
+
 public class Program {
+
 	public static void Main(string[] args)
 	{
 		var builder = WebApplication.CreateBuilder(args);

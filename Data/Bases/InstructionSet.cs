@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace RamMachineInterpreter.Data;
 
-public abstract class InstructionSet<TInterpreter, TMemory, TSelf, TOperation, TAttribute, T> 
+public abstract class InstructionSet<TInterpreter, TMemory, TSelf, TOperation, TAttribute, T>
 	: IInstructionSet<TOperation, TAttribute, T>
 	where TInterpreter : IInterpreter<TMemory, TSelf, TOperation, TAttribute, T>
 	where TOperation : IOperation<T>
@@ -16,17 +16,19 @@ public abstract class InstructionSet<TInterpreter, TMemory, TSelf, TOperation, T
 	protected IMemory<T> Memory => Interpreter.Memory;
 	protected TInterpreter Interpreter { get; set; }
 
-	public InstructionSet(TInterpreter interpreter, bool isCaseSensitive = false) {
+	public InstructionSet(TInterpreter interpreter, bool isCaseSensitive = false)
+	{
 		Interpreter = interpreter;
-		
-		StringComparer comparer = isCaseSensitive 
-			? StringComparer.Ordinal 
+
+		StringComparer comparer = isCaseSensitive
+			? StringComparer.Ordinal
 			: StringComparer.OrdinalIgnoreCase;
 		var operations = new Dictionary<string, Func<TOperation, string?>>(comparer);
 		var operationAttributes = new Dictionary<string, TAttribute>(comparer);
 		var methods = GetType().GetMethods();
 
-		foreach (var method in methods ) {
+		foreach(var method in methods)
+		{
 			var cmds = method.GetCustomAttributes<TAttribute>();
 			if(!cmds.Any())
 				continue;
@@ -55,11 +57,11 @@ public abstract class InstructionSet<TInterpreter, TMemory, TSelf, TOperation, T
 
 	public string? Execute(TOperation operation)
 	{
-		if(operation.Operation is null)
+		if(operation.InstructionId is null)
 			throw new CommandException("No operation specified.", operation);
-		if(!Operations.TryGetValue(operation.Operation, out var action))
+		if(!Operations.TryGetValue(operation.InstructionId, out var action))
 			throw new CommandException($"Unknown operation:", operation);
-		
+
 		return action(operation);
 	}
 }

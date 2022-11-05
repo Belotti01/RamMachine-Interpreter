@@ -106,11 +106,10 @@
 			.Where(x => x.Length > 0);
 
 		string[] code = Code.Split('\n');
-		var errorLines = Interpreter.LoadCode(code);
 
-		if(errorLines.Length > 0)
+		if(!Interpreter.TryLoadCode(code, out var errorLines))
 		{
-			Output = "Parsing failed:" + string.Join("\n\n", errorLines);
+			Output = "[PARSING FAILED]\n-> " + string.Join("\n\n-> ", errorLines);
 			return;
 		}
 

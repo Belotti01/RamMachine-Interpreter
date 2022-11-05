@@ -4,8 +4,10 @@ namespace RamMachineInterpreter.Data;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class OperationAttribute : Attribute {
+
 	[DisplayName("Operation")]
 	public string Command { get; }
+
 	[DisplayName("Description")]
 	public virtual string? Description { get; }
 
@@ -13,7 +15,7 @@ public class OperationAttribute : Attribute {
 	{
 		Command = command;
 	}
-	
+
 	public OperationAttribute(string command, string description)
 	{
 		Command = command;

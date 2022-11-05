@@ -2,14 +2,13 @@
 
 namespace RamMachineInterpreter.Data;
 
-public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribute, T> 
+public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribute, T>
 	: IInterpreter<TMemory, TInstructionSet, TOperation, TAttribute, T>
 	where TOperation : IOperation<T>
 	where T : struct
 	where TMemory : IMemory<T>
 	where TAttribute : OperationAttribute
-	where TInstructionSet : IInstructionSet<TOperation, TAttribute, T> 
-{
+	where TInstructionSet : IInstructionSet<TOperation, TAttribute, T> {
 	public abstract TInstructionSet InstructionSet { get; protected set; }
 	public abstract TMemory Memory { get; protected set; }
 	public int Delay { get; set; } = 10;
@@ -48,7 +47,7 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 					break;
 				}
 			}
-		}catch
+		} catch
 		{
 			IsExecuting = false;
 			throw;
@@ -79,7 +78,7 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 	{
 		if(!IsExecuting)
 			return;
-		
+
 		_interrupted = true;
 		// Wait for the interruption to be applied
 		do
@@ -88,12 +87,12 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 		} while(IsExecuting);
 	}
 
-	public string[] LoadCode(IEnumerable<string> codeLines)
+	public bool TryLoadCode(IEnumerable<string> codeLines, [NotNullWhen(false)] out string[]? errors)
 	{
-		int lineNumber = -1;
+		int lineNumber = 0;
 		TOperation operation;
-		List<string> errors = new();
-		
+		List<string> errorsList = new();
+
 		foreach(string codeLine in codeLines)
 		{
 			lineNumber++;
@@ -106,11 +105,14 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 				Instructions.Add(operation);
 			} catch(CommandException ex)
 			{
-				errors.Add(ex.Message);
+				errorsList.Add(ex.Message);
 			}
 		}
 
-		return errors.ToArray();
+		errors = errorsList.Count == 0
+			? null
+			: errorsList.ToArray();
+		return errors is null;
 	}
 
 	public abstract TOperation ParseCodeLine(string codeLine, int lineNumber);
