@@ -1,6 +1,6 @@
 ### BETA VERSION
 #### Current issues and TODOs
-- Code and Inputs fields are plain text areasL one line = one instruction/input
+- Code and Inputs fields are plain text areas: one line = one instruction/input
 - The Memory view currently displays all registries from position 0 to the highest index used by the code in a single table. This can become slow and ruin the page navigation experience.
 - The Memory view is also missing language-specific registries (e.g.: the Instruction Register)
 - The output area is just plain ugly
