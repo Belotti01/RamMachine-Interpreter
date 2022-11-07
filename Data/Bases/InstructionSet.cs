@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace RamMachineInterpreter.Data;
@@ -33,26 +34,26 @@ public abstract class InstructionSet<TInterpreter, TMemory, TSelf, TOperation, T
 			if(!cmds.Any())
 				continue;
 
-			if(method.ReturnType != typeof(string))
-				throw new Exception($"Method \"{method.Name}\" of type \"{GetType().Name}\" must return a value of type <string?>.");
-
+			Debug.Assert(method.ReturnType == typeof(string), $"Method \"{method.Name}\" of type \"{GetType().Name}\" must return a value of type <string?>.");
 			var param = method.GetParameters();
-			if(param.Length != 1 || param[0].ParameterType != typeof(TOperation))
-				throw new Exception($"Method \"{method.Name}\" of type \"{GetType().Name}\" must have exactly one parameter of type {nameof(TOperation)}.");
+			Debug.Assert(param.Length == 0 || (param.Length == 1 && param[0].ParameterType != typeof(TOperation)), $"Method \"{method.Name}\" of type \"{GetType().Name}\" must have exactly one parameter of type {nameof(TOperation)}.");
 
 			foreach(var attr in cmds)
 			{
-				if(operations.ContainsKey(attr.Command))
-				{
-					throw new Exception($"Duplicate command definition for \"{attr.Command}\" in {GetType().Name}.");
-				}
-				operations.Add(attr.Command, method.CreateDelegate<Func<TOperation, string?>>(this));
+				Debug.Assert(!operations.ContainsKey(attr.Command), $"Duplicate command definition for \"{attr.Command}\" in {GetType().Name}.");
+				// Allow parameterless methods, in case the operation data is not needed.
+				Func<TOperation, string?> func = param.Length == 1
+					? method.CreateDelegate<Func<TOperation, string?>>(this)
+					: (op) => method.Invoke(this, null) as string;
+				
+				operations.Add(attr.Command, func);
 				operationAttributes.Add(attr.Command, attr);
 			}
 		}
 
 		Operations = new(operations);
 		OperationAttributes = new(operationAttributes);
+		Debug.WriteLine($"Loaded {Operations.Count} operations for type {GetType().Name}");
 	}
 
 	public string? Execute(TOperation operation)
