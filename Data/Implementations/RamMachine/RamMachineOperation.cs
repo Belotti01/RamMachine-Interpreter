@@ -19,7 +19,7 @@ public class RamMachineOperation : OperationBase<long> {
 		string[] parts = codeLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 		if(parts[0].EndsWith('='))
 		{
-			InstructionId = parts[0][..^1].ToUpper();
+			Instruction = parts[0][..^1].ToUpper();
 			IsDirectValue = true;
 		} else
 		{
@@ -35,11 +35,11 @@ public class RamMachineOperation : OperationBase<long> {
 					IsDirectValue = true;
 				}
 			}
-			InstructionId = parts[0].ToUpper();
+			Instruction = parts[0].ToUpper();
 		}
 
-		if(!set.OperationAttributes.TryGetValue(InstructionId, out var attribute))
-			throw new CommandException($"Unknown operation: {InstructionId}", this);
+		if(!set.OperationAttributes.TryGetValue(Instruction, out var attribute))
+			throw new CommandException($"Unknown operation: {Instruction}", this);
 
 		if(attribute.RequiresLabelArgument)
 		{
@@ -54,12 +54,12 @@ public class RamMachineOperation : OperationBase<long> {
 		if(!attribute.RequiresNumericArgument)
 		{
 			if(parts.Length > 1)
-				throw new CommandException($"Operation {InstructionId} does not take a parameter.", this);
+				throw new CommandException($"Operation {Instruction} does not take a parameter.", this);
 			return;
 		}
 
 		if(parts.Length == 1)
-			throw new CommandException($"Operation {InstructionId} requires a parameter.", this);
+			throw new CommandException($"Operation {Instruction} requires a parameter.", this);
 
 		if(parts.Length > 2)
 			throw new CommandException($"Too many arguments.", this);
@@ -67,7 +67,7 @@ public class RamMachineOperation : OperationBase<long> {
 		if(parts[1].StartsWith('*'))
 		{
 			if(!attribute.AllowPointer)
-				throw new CommandException($"Operation {InstructionId} does not allow pointer parameters.", this);
+				throw new CommandException($"Operation {Instruction} does not allow pointer parameters.", this);
 			if(IsDirectValue)
 				throw new CommandException($"Parameter \"{parts[1]}\" cannot be both direct and pointer.", this);
 			IsPointerValue = true;

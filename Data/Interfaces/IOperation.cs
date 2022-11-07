@@ -10,5 +10,5 @@ public interface IOperation<T> where T : struct {
 	/// <summary>
 	/// The unique identifier of the instruction to execute.
 	/// </summary>
-	public string? InstructionId { get; }
+	public string? Instruction { get; }
 }

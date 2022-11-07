@@ -16,7 +16,7 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 	protected bool _interrupted = false;
 	public int InstructionsCount => Instructions.Count;
 	public bool IsExecuting { get; protected set; }
-	public string[]? Inputs { get; protected set; }
+	public string[]? Inputs { get; set; }
 	public int NextInputIndex { get; set; }
 
 	public async Task<string[]> ExecuteAsync(IEnumerable<string> inputs)

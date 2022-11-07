@@ -36,7 +36,7 @@ public abstract class InstructionSet<TInterpreter, TMemory, TSelf, TOperation, T
 
 			Debug.Assert(method.ReturnType == typeof(string), $"Method \"{method.Name}\" of type \"{GetType().Name}\" must return a value of type <string?>.");
 			var param = method.GetParameters();
-			Debug.Assert(param.Length == 0 || (param.Length == 1 && param[0].ParameterType != typeof(TOperation)), $"Method \"{method.Name}\" of type \"{GetType().Name}\" must have exactly one parameter of type {nameof(TOperation)}.");
+			Debug.Assert(param.Length == 0 || (param.Length == 1 && param[0].ParameterType == typeof(TOperation)), $"Method \"{method.Name}\" of type \"{GetType().Name}\" must have exactly one parameter of type {nameof(TOperation)}.");
 
 			foreach(var attr in cmds)
 			{
@@ -58,9 +58,9 @@ public abstract class InstructionSet<TInterpreter, TMemory, TSelf, TOperation, T
 
 	public string? Execute(TOperation operation)
 	{
-		if(operation.InstructionId is null)
+		if(operation.Instruction is null)
 			throw new CommandException("No operation specified.", operation);
-		if(!Operations.TryGetValue(operation.InstructionId, out var action))
+		if(!Operations.TryGetValue(operation.Instruction, out var action))
 			throw new CommandException($"Unknown operation:", operation);
 
 		return action(operation);

@@ -31,7 +31,7 @@
 						<MudItem md="3">
 							<div class="d-flex flex-column">
 								<p>Delay between each instruction:</p>
-								<MudSlider T="int" Step="@DELAY_STEP" Min="@MIN_DELAY" Max="@MAX_DELAY" TickMarks TickMarkLabels="@GetDelayLabels()" @bind-Value="@Interpreter.Delay" />
+								<MudSlider T="int" Step="@DELAY_STEP" Min="@MIN_DELAY" Max="@MAX_DELAY" TickMarks TickMarkLabels="@GetDelayLabels()" @bind-Value="@Delay"/>
 							</div>
 						</MudItem>
 					</MudGrid>
@@ -59,7 +59,7 @@
 				<MudButton FullWidth Disabled="@IsRunning" OnClick="Run" StartIcon="@Icons.Material.Filled.PlayArrow">Run</MudButton>
 			</MudItem>
 			<MudItem md="4" sm="5" xs="12">
-				<MudButton FullWidth Disabled="@(!IsRunning)" OnClick="Interpreter.StopExecutionAsync" StartIcon="@Icons.Material.Filled.Square">Interrupt</MudButton>
+				<MudButton FullWidth Disabled="@(!IsRunning || InterruptionRequested)" OnClick="() => InterruptionRequested = true" StartIcon="@Icons.Material.Filled.Square">Interrupt</MudButton>
 			</MudItem>
 		</MudGrid>
 
@@ -85,70 +85,12 @@
 	[Parameter, Required, NotNull]
 	public string? Title { get; set; }
 	public TInterpreter Interpreter { get; set; } = new();
-	private double Delay { get; set; } = 0.1;
+	private int Delay { get; set; } = 0;
 	private string Code { get; set; } = "";
 	private string Output { get; set; } = "";
 	private string Input { get; set; } = "";
-	private bool IsRunning => Interpreter?.IsExecuting ?? false;
-	private Task? _bgTask, _refresher;
-
-	private void Run()
-	{
-		if(IsRunning)
-		{
-			Output = "Code is already running.\n\n" + Output;
-		}
-
-		Interpreter.Reset();
-		Output = "Executing...";
-		var inputs = Input
-			.Split('\n')
-			.Where(x => x.Length > 0);
-
-		string[] code = Code.Split('\n');
-
-		if(!Interpreter.TryLoadCode(code, out var errorLines))
-		{
-			Output = "[PARSING FAILED]\n-> " + string.Join("\n\n-> ", errorLines);
-			return;
-		}
-
-		_refresher = new(async () =>
-		{
-			while(Interpreter.IsExecuting)
-			{
-				await Task.Delay(Interpreter.Delay);
-				await InvokeAsync(() => StateHasChanged());
-			}
-		});
-		_refresher.Start();
-		_bgTask = new Task(async () =>
-		{
-			try
-			{
-				var outputs = await Interpreter.ExecuteAsync(inputs);
-				Output = string.Join("\n", outputs);
-			} catch(CommandException ex)
-			{
-				Output = "ERROR: " + ex.Message;
-			} catch(Exception ex)
-			{
-				Output = "An internal error occurred.";
-				if(Debugger.IsAttached)
-				{
-					Output += "\n" + ex.ToString();
-				}
-			}
-			await InvokeAsync(() => StateHasChanged());
-		});
-
-		_bgTask.ContinueWith((x) =>
-		{
-			InvokeAsync(() => base.StateHasChanged());
-		});
-
-		_bgTask.Start();
-	}
+	private bool IsRunning { get; set; } = false;
+	private bool InterruptionRequested { get; set; } = false;
 
 	public string[] GetDelayLabels()
 	{
@@ -165,5 +107,84 @@
 		}
 
 		return labels;
+	}
+
+	private async Task Run()
+	{
+		if(IsRunning)
+			return;	
+
+		Interpreter.Reset();
+		InterruptionRequested = false;
+
+		Output = "Parsing Code...";
+		if (!TryCompile())
+			return;	
+
+		if(Interpreter.InstructionsCount == 0)
+		{
+			Output = "Nothing to Parse";
+			return;
+		}
+
+		IsRunning = true;
+		var inputs = Input
+			.Split('\n')
+			.Where(x => x.Length > 0)
+			.ToArray();
+		Interpreter.Inputs = inputs;
+		Output = "";
+		string? output = null;
+		do
+		{
+			if (InterruptionRequested)
+			{
+				Output += "\n\nExecution interrupted.";
+				break;
+			}
+
+			try {
+				output = Interpreter.ExecuteNext();
+			} catch(CommandException ex)
+			{
+				Output = "> Error: " + ex.Message;
+				break;
+			} catch(Exception ex)
+			{
+				Output = "An internal error occurred.";
+				if(Debugger.IsAttached)
+				{
+					Output += "\n[DEBUG] " + ex.ToString();
+				}
+				break;
+			}
+
+			if(output is not null)
+			{
+				Output += "\n" + output;
+			}
+			
+			StateHasChanged();
+
+			if(Delay > 0)
+			{
+				await Task.Delay(Delay);
+			}
+		} while(Interpreter.Memory.InstructionRegister < Interpreter.InstructionsCount);
+
+		IsRunning = false;
+		StateHasChanged();
+	}
+
+	private bool TryCompile()
+	{
+		string[] code = Code.Split('\n');
+		if(!Interpreter.TryLoadCode(code, out string[]? errors))
+		{
+			Output = "Parsing Failed:\n\n" + string.Join("\n\n- ", errors);
+			StateHasChanged();
+			return false;
+		}
+		return true;
 	}
 }

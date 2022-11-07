@@ -9,7 +9,7 @@
 @using System.ComponentModel.DataAnnotations;
 @using System.Diagnostics.CodeAnalysis;
 
-<MudTable Items="Grid" RowsPerPage="20" AllowUnsorted Hover Virtualize>
+<MudTable Items="Grid" RowsPerPage="@PageLengthOptions[1]" AllowUnsorted Hover Virtualize>
 	<HeaderContent>
 		@for(int i = 0; i < Headers.Count; i++)
 		{
@@ -25,7 +25,7 @@
 		}
 	</RowTemplate>
 	<PagerContent>
-		<MudTablePager HideRowsPerPage />
+		<MudTablePager PageSizeOptions="@PageLengthOptions" />
 	</PagerContent>
 </MudTable>
 
@@ -34,6 +34,7 @@
 	public TInstructionSet? InstructionSet { get; set; }
 	public List<string> Headers { get; private set; } = new();
 	public List<List<object?>> Grid { get; private set; } = new();
+	public int[] PageLengthOptions { get; private set; } = new int[] { 5, 10, 20, 50 };
 
 	protected string ToDisplay(object? value)
 	{

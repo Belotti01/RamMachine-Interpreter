@@ -6,12 +6,14 @@
 	<table class="table table-bordered table-dark table-striped">
 		<thead>
 			<tr>
-				<th scope="col" class="text-center w-50"><MudText>Accumulator</MudText></th>
+					<th scope="col" class="text-center w-50"><MudText>Accumulator</MudText></th>
+					<th scope="col" class="text-center w-50"><MudText>Instruction Register</MudText></th>
 			</tr>
 		</thead>
 		<tbody>
-			<tr>
-				<td class="text-center"><MudText>@Memory.Accumulator</MudText></td>
+				<tr>
+					<td class="text-center"><MudText>@Memory.Accumulator</MudText></td>
+					<td class="text-center"><MudText>@Memory.InstructionRegister</MudText></td>
 			</tr>
 		</tbody>
 	</table>
@@ -32,20 +34,40 @@
 		<tbody>
 			@for(ulong d = 0; d < Memory.Size; d += 10)
 			{
+				bool draw = false;
 				ulong td = d;
 				<tr>
-					<th scope="row" class="text-end">@d - @(d + 9)</th>
+
 					@for(ulong i = 0; i < 10; i++)
 					{
 						ulong ti = i;
-						@if (Memory.HasValue(td+ti))
+						@if(Memory.HasValue(td + ti))
 						{
+							draw = true;
+							break;
+						}
+					}
+
+					@if (draw)
+					{
+						drewLastLine = true;
+						<th scope="row" class="text-end">@d - @(d + 9)</th>
+						@for (ulong i = 0; i < 10; i++)
+						{
+							ulong ti = i;
+							@if (Memory.HasValue(td + ti))
+							{
 								<td class="text-center fw-bold"><MudText Class="bg-gradient fw-bolder">@Memory[td+ti]</MudText></td>
-						}
-						else 
-						{
+							}
+							else
+							{
 								<td class="text-center">0</td>
+							}
 						}
+					}else if(drewLastLine)
+					{
+						drewLastLine = false; 
+						<td class="text-center" colspan="12">.   .   .</td>
 					}
 				</tr>
 			}
@@ -55,6 +77,7 @@
 
 
 @code {
+	private bool drewLastLine = false;
 	[Parameter]
 	public IMemory<TValue>? Memory { get; set; }
 }

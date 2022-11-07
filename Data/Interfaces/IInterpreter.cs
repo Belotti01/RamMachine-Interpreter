@@ -43,7 +43,7 @@ public interface IInterpreter<TMemory, TInstructionSet, TOperation, TAttribute, 
 	/// <summary>
 	/// The data to be issued when required by an input-access instruction.
 	/// </summary>
-	public string[]? Inputs { get; }
+	public string[]? Inputs { get; set; }
 
 	/// <summary>
 	/// The index of the next element inside <see cref="Inputs"/> that will be issued when required by an input-access instruction.
