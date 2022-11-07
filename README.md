@@ -6,6 +6,9 @@ The program is built as a framework that allows the implementation of various ot
 Original Idea: https://github.com/skni-kod/Ram-machine
 
 ## BETA VERSION
+The following is a list of placeholders and missing features present in the latest BETA release.
+Striked-through elements are confirmed to be fixed/implemented for the next release.
+
 ### Current issues and TODOs
 - Code and Inputs fields are plain text areas: one line = one instruction/input
 - ~~The Memory view currently displays all registries from position 0 to the highest index used by the code in a single table. This can become slow and ruin the page navigation experience.~~
