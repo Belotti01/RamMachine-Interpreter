@@ -90,7 +90,7 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 	public bool TryLoadCode(IEnumerable<string> codeLines, [NotNullWhen(false)] out string[]? errors)
 	{
 		int lineNumber = 0;
-		TOperation operation;
+		TOperation? operation;
 		List<string> errorsList = new();
 
 		foreach(string codeLine in codeLines)
@@ -102,6 +102,8 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 			try
 			{
 				operation = ParseCodeLine(codeLine.Trim(), lineNumber);
+				if(operation is null)
+					continue;
 				Instructions.Add(operation);
 			} catch(CommandException ex)
 			{
@@ -115,5 +117,5 @@ public abstract class Interpreter<TMemory, TInstructionSet, TOperation, TAttribu
 		return errors is null;
 	}
 
-	public abstract TOperation ParseCodeLine(string codeLine, int lineNumber);
+	public abstract TOperation? ParseCodeLine(string codeLine, int lineNumber);
 }

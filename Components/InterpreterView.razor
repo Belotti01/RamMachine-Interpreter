@@ -12,8 +12,9 @@
 @typeparam TOperation where TOperation : IOperation<T>
 @typeparam T where T : struct
 
-
-<MudText Typo="Typo.h1" Align="Align.Center" GutterBottom>@Title</MudText>
+@if(!string.IsNullOrEmpty(Title)) {
+	<MudText Typo="Typo.h1" Align="Align.Center" GutterBottom>@Title</MudText>
+}
 
 @if (IsLoading)
 {
@@ -170,7 +171,7 @@
 			{
 				await Task.Delay(Delay);
 			}
-		} while(Interpreter.Memory.InstructionRegister < Interpreter.InstructionsCount);
+		} while(Interpreter.Memory.InstructionRegister > 0 && Interpreter.Memory.InstructionRegister < Interpreter.InstructionsCount);
 
 		IsRunning = false;
 		StateHasChanged();

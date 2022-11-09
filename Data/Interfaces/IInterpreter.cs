@@ -69,7 +69,7 @@ public interface IInterpreter<TMemory, TInstructionSet, TOperation, TAttribute, 
 	/// <param name="codeLine">The code segment to parse.</param>
 	/// <param name="lineNumber">The segment number of the code to parse.</param>
 	/// <returns>The parsed <see cref="TOperation"/>.</returns>
-	public TOperation ParseCodeLine(string codeLine, int lineNumber);
+	public TOperation? ParseCodeLine(string codeLine, int lineNumber);
 
 	/// <summary>
 	/// Execute a single operation in <see cref="Instructions"/>, resuming from the last executed one.

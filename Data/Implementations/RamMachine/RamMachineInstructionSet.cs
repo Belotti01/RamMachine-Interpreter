@@ -143,9 +143,9 @@ public class RamMachineInstructionSet : InstructionSet<RamMachineInterpreter, Ra
 	}
 
 	[RamMachineOperation("HALT", false, false, false, false)]
-	public string? Halt(RamMachineOperation operation)
+	public string? Halt()
 	{
-		Memory.InstructionRegister = int.MaxValue;
+		Memory.InstructionRegister = Interpreter.InstructionsCount;
 		return null;
 	}
 }
