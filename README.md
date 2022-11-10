@@ -19,7 +19,6 @@ Striked-through elements are confirmed to be fixed/implemented for the next rele
 - TODO: Verbose mode, where each line outputs what it did as it is executed
 - TODO: Registry exportation in various format
 - TODO: Code importation and exportation
-- Implement moar languages (Brainfuck maybe?)
 
 ## Running the Program
 ### Requirements 

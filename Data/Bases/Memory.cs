@@ -42,7 +42,8 @@ public class Memory<T> : IMemory<T>
 		var namedRegistries = _GetDefinedNamedRegistries();
 		bool added;
 		_UndefinedNamedRegistries = new();
-		foreach (var name in undefinedNamedRegistriesNames) {
+		foreach (var name in undefinedNamedRegistriesNames) 
+		{
 			_UndefinedNamedRegistries.Add(name, default);
 			added = namedRegistries.TryAdd(name, new(
 				() => _UndefinedNamedRegistries[name],
@@ -77,9 +78,7 @@ public class Memory<T> : IMemory<T>
 	public virtual T GetRegistryValue(ulong registry)
 	{
 		if(registry < Size && _memory.TryGetValue(registry, out T value))
-		{
 			return value;
-		}
 		// Registry has no assigned value - return default
 		return default;
 	}
